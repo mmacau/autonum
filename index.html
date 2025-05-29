@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Generador d'IDs</title>
+  <title>Generador de Código Diario</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 2rem; }
     button { padding: 10px 20px; font-size: 16px; }
@@ -11,8 +11,8 @@
 </head>
 <body>
 
-  
-  <button onclick="generarCodigo()">Nou ID Incendi</button>
+  <h1>Generador de Código Diario</h1>
+  <button onclick="generarCodigo()">Generar nuevo código</button>
 
   <div id="resultado"></div>
 
@@ -44,15 +44,12 @@
         }
 
         const nuevoCodigo = `${hoy}-AI-${nuevoXX}`;
-        document.getElementById("resultado").innerText = ` ${nuevoCodigo}`;
-        //// portapapers
-       
+        document.getElementById("resultado").innerText = `Nuevo código: ${nuevoCodigo}`;
+
       } catch (err) {
-        document.getElementById("resultado").innerText = "Error al obtener la dada.";
+        document.getElementById("resultado").innerText = "Error al obtener el dato.";
         console.error(err);
       }
-      ////
-      
     }
   </script>
 

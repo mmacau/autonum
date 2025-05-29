@@ -11,8 +11,8 @@
 </head>
 <body>
 
-  <h1>Generador de Código Diario</h1>
-  <button onclick="generarCodigo()">Generar nuevo código</button>
+ 
+  <button onclick="generarCodigo()">Nou ID Incendi</button>
 
   <div id="resultado"></div>
 
@@ -44,7 +44,7 @@
         }
 
         const nuevoCodigo = `${hoy}-AI-${nuevoXX}`;
-        document.getElementById("resultado").innerText = `Nuevo código: ${nuevoCodigo}`;
+        document.getElementById("resultado").innerText = `${nuevoCodigo}`;
 
       } catch (err) {
         document.getElementById("resultado").innerText = "Error al obtener el dato.";

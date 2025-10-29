@@ -1,58 +1,126 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="ca">
 <head>
-  <meta charset="UTF-8">
-  <title>Generador de Código Diario</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; }
-    button { padding: 10px 20px; font-size: 16px; }
-    #resultado { margin-top: 20px; font-size: 18px; font-weight: bold; }
-  </style>
-</head>
-<body>
-
- 
-  <button onclick="generarCodigo()">Nou ID Incendi</button>
-
-  <div id="resultado"></div>
-
-  <script>
-    //proves
-    async function generarCodigo() {
-      const url = "https://services-eu1.arcgis.com/jukYmBukbIJBEB9m/arcgis/rest/services/survey123_b694a7838ce24539a6d6c55914af72ea/FeatureServer/0/query?token=AAPTxy8BH1VEsoebNVZXo8HurOhx2aQ2eUDGlejJeP4ch4Wx6tOTniAv2gFOyBn64axzQOktbVL85ec92-dNmVs5-iD75vyCzUFwshjZJfwueEwxBrvZlmVb3ScF1L3poTX--wmOMRDk-wv8cDDcrdbqou9Wt8EUz_vBzUdaoi_ietLxVwHRRPXEtEpoQVHRl9uc3BcTmAKOCfJW2ZPAT82aiWm4B0DkZpxVYx4n61ei4m7UoGx6i6HeBi1nHRC9csYhBApjVzRHbTVP7hUUAsO2LQ..AT1_WOcJVqo&where=1%3D1&outFields=field_33&returnGeometry=false&f=json&orderByFields=CreationDate%20DESC&resultRecordCount=1";
-
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
-        const dd = String(now.getDate()).padStart(2, "0");
-        const hoy = `${yyyy}${mm}${dd}`; // formato: AAAAMMDD
-
-        let nuevoXX = "01"; // valor por defecto
-
-        if (data.features.length > 0) {
-          const lastCode = data.features[0].attributes.field_33; // Ej: "20250521-AI-03"
-          const [lastFecha, , lastXX] = lastCode.split("-");
-          
-          if (lastFecha === hoy) {
-            // Mismo día: incrementa el contador
-            const nuevoNum = parseInt(lastXX) + 1;
-            nuevoXX = nuevoNum.toString().padStart(2, "0");
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Número d'Expedient</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #121812;
         }
+        .btn-generar {
+            background-color: #22c55e;
+            color: #121812;
+            transition: background-color 0.3s ease;
+        }
+        .btn-generar:hover {
+            background-color: #4ade80;
+        }
+        .btn-generar:disabled {
+            background-color: #166534;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen text-green-400">
 
-        const nuevoCodigo = `${hoy}-AI-${nuevoXX}`;
-        document.getElementById("resultado").innerText = `${nuevoCodigo}`;
+    <div class="text-center p-8 rounded-lg shadow-2xl max-w-md w-full" style="background-color: #1c281c;">
+        <h1 class="text-3xl font-bold mb-8">Generador de Número d'Expedients</h1>
+        
+        <button id="generarBtn" class="btn-generar font-bold py-3 px-6 rounded-lg text-lg mb-6">
+            GENERAR EXPEDIENT
+        </button>
+        
+        <div id="resultat" class="hidden mt-4 p-4 border-2 border-green-500 rounded-lg bg-black bg-opacity-20">
+            <h2 class="text-xl font-semibold">El teu número d'expedient és:</h2>
+            <p id="pResultatExpedient" class="text-2xl font-mono mt-2"></p>
+        </div>
 
-      } catch (err) {
-        document.getElementById("resultado").innerText = "Error al obtener el dato.";
-        console.error(err);
-      }
-    }
-  </script>
+        <div id="error" class="text-red-500 mt-4 font-semibold"></div>
+    </div>
 
+    <script>
+        document.getElementById('generarBtn').addEventListener('click', async () => {
+            const pResultat = document.getElementById('pResultatExpedient');
+            const resultatDiv = document.getElementById('resultat');
+            const errorDiv = document.getElementById('error');
+            const generarBtn = document.getElementById('generarBtn');
+
+            resultatDiv.classList.add('hidden');
+            errorDiv.textContent = '';
+            generarBtn.disabled = true;
+            generarBtn.textContent = 'Generant...';
+
+            try {
+                // PAS 1: Demanar el token
+                const tokenResponse = await fetch('https://www.arcgis.com/sharing/rest/oauth2/token?client_id=k0gInzwOWOcJVqoV&client_secret=2eb5e05c126243bc9bf9f706b87c0f45&grant_type=client_credentials&expiration=1440&f=json', {
+                    method: 'POST'
+                });
+
+                if (!tokenResponse.ok) throw new Error('No s\'ha pogut obtenir el token d\'autenticació.');
+                
+                const tokenData = await tokenResponse.json();
+                const token = tokenData.access_token;
+
+                // PAS 2: Consultar l'últim registre per OBJECTID
+                const queryUrl = `https://services-eu1.arcgis.com/jukYmBukbIJBEB9m/arcgis/rest/services/survey123_dddbaf4e75c24ecaae39c1b6bfa0d201_form/FeatureServer/0/query`;
+                
+                const params = new URLSearchParams({
+                    where: '1=1',
+                    // Demanem el camp que conté l'expedient complet, que sembla ser '_id'
+                    outFields: '_id', 
+                    orderByFields: 'OBJECTID DESC', 
+                    resultRecordCount: 1,
+                    f: 'json',
+                    token: token
+                });
+
+                const featureResponse = await fetch(`${queryUrl}?${params.toString()}`);
+                if (!featureResponse.ok) throw new Error("Error en consultar l'últim expedient.");
+                
+                const featureData = await featureResponse.json();
+
+                let ultimNumero = 0; // El número a incrementar, ex: 219
+                
+                if (featureData.features && featureData.features.length > 0) {
+                    const atributs = featureData.features[0].attributes;
+
+                    // Ens assegurem que el camp '_id' existeix i no és buit
+                    if (atributs && atributs._id) {
+                        const expedientCompletAnterior = atributs._id; // Això serà un text com "2025-EXP0219"
+                        
+                        // CORRECCIÓ CLAU: Extraiem NOMÉS els últims 4 caràcters
+                        const partNumericaStr = expedientCompletAnterior.slice(-4); // Això serà "0219"
+                        
+                        // Convertim aquesta part a número
+                        const numConvertit = parseInt(partNumericaStr, 10);
+                        
+                        if (!isNaN(numConvertit)) {
+                            ultimNumero = numConvertit; // Ara ultimNumero valdrà 219
+                        } else {
+                            throw new Error(`El format de l'expedient rebut ('${expedientCompletAnterior}') no és correcte.`);
+                        }
+                    }
+                }
+                
+                // PAS 3: Crear el nou número d'expedient correctament
+                const nouNumero = ultimNumero + 1; // Ex: 219 + 1 = 220
+                const anyActual = new Date().getFullYear();
+                const numExpedientFormatat = String(nouNumero).padStart(4, '0'); // Ex: "0220"
+                const nouExpedient = `${anyActual}-EXP${numExpedientFormatat}`; // Ex: "2025-EXP0220"
+
+                // Mostrar el resultat
+                pResultat.textContent = nouExpedient;
+                resultatDiv.classList.remove('hidden');
+
+            } catch (error) {
+                errorDiv.textContent = `Error: ${error.message}`;
+            } finally {
+                generarBtn.disabled = false;
+                generarBtn.textContent = 'GENERAR EXPEDIENT';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -79,11 +79,11 @@
                 const tokenData = await tokenResponse.json();
                 const token = tokenData.access_token;
 
-                // PAS 2: Consultar l'últim registre per OBJECTID
-                const queryUrl = `https://services-eu1.arcgis.com/jukYmBukbIJBEB9m/arcgis/rest/services/survey123_dddbaf4e75c24ecaae39c1b6bfa0d201_form/FeatureServer/0/query`;
+                // PAS 2: Consultar l'últim registre per OBJECTID https://services-eu1.arcgis.com/jukYmBukbIJBEB9m/arcgis/rest/services/survey123_7b7c8c906c504ee68f0192323d5d90c4/FeatureServer
+                const queryUrl = `https://services-eu1.arcgis.com/jukYmBukbIJBEB9m/arcgis/rest/services/survey123_7b7c8c906c504ee68f0192323d5d90c4/FeatureServer/0/query`;
                 const params = new URLSearchParams({
-                    where: "(_id IS NOT NULL) AND (_id <> '')",
-                    outFields: '_id',
+                    where: "(expedient IS NOT NULL) AND (expedient <> '')",
+                    outFields: 'expedient',
                     orderByFields: 'OBJECTID DESC', 
                     resultRecordCount: 1,
                     f: 'json',
@@ -97,8 +97,8 @@
                 let ultimNumero = 0;
                 if (featureData.features && featureData.features.length > 0) {
                     const atributs = featureData.features[0].attributes;
-                    if (atributs && atributs._id) {
-                        const expedientCompletAnterior = atributs._id;
+                    if (atributs && atributs.expedient) {
+                        const expedientCompletAnterior = atributs.expedient;
                         const partNumericaStr = expedientCompletAnterior.slice(-4);
                         const numConvertit = parseInt(partNumericaStr, 10);
                         if (!isNaN(numConvertit)) {
